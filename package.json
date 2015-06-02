@@ -1,0 +1,30 @@
+{
+  "name": "react_property_cross",
+  "version": "0.0.0",
+  "description": "Learning React.js",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/starostin/react_property_cross.git"
+  },
+  "author": "Oleg",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/starostin/react_property_cross/issues"
+  },
+  "devDependencies": {
+    "gulp-rename": "~1.2.2",
+    "gulp-concat": "~2.5.2",
+    "gulp-uglify": "~1.2.0",
+    "gulp-jshint": "~1.11.0",
+    "gulp-minify-css": "~0.3.11",
+    "gulp-size": "~1.1.0",
+    "gulp-imagemin": "~1.1.0",
+    "gulp-webserver": "~0.9.1",
+    "gulp": "~3.8.11",
+    "browser-sync": "~2.7.6"
+  }
+}
