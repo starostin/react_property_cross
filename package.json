@@ -28,9 +28,11 @@
     "browser-sync": "~2.7.6"
   },
   "dependencies": {
+    "browserify": "^10.2.3",
     "gulp": "^3.9.0",
     "gulp-browserify": "^0.5.1",
     "react": "^0.13.3",
-    "reactify": "^1.1.1"
+    "reactify": "^1.1.1",
+    "vinyl-source-stream": "^1.1.0"
   }
 }

@@ -1,16 +1,26 @@
 // Include gulp
+var browserify =  require('browserify');
 var gulp = require('gulp');
-var browserify =  require('gulp-browserify');
+//var browserify =  require('gulp-browserify');
 var concat = require('gulp-concat');
+var reactify = require('reactify');
+var source = require('vinyl-source-stream');
 
 
+//gulp.task('browserify', function(){
+//    gulp.src('www/index.js')
+//        .pipe(browserify({transform: 'reactify'}))
+//        .pipe(concat('index.js'))
+//        .pipe(gulp.dest('build'));
+//});
 gulp.task('browserify', function(){
-    gulp.src('www/index.js')
-        .pipe(browserify({transform: 'reactify'}))
-        .pipe(concat('index.js'))
+    var b = browserify();
+    b.transform(reactify); // use the reactify transform
+    b.add('www/index.js');
+    return b.bundle()
+        .pipe(source('index.js'))
         .pipe(gulp.dest('build'));
 });
-
 gulp.task('copy', function(){
     gulp.src('www/index.html')
         .pipe(gulp.dest('build'));
