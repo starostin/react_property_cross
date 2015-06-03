@@ -30,7 +30,7 @@ gulp.task('default', ['browserify', 'copy']);
 
 gulp.task('watch', function(){
     gulp.watch('www/**/*.*', ['default'])
-})
+});
 
 // Include Our Plugins
 //var jshint = require('gulp-jshint');

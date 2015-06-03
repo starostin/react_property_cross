@@ -4,7 +4,7 @@ var React = require('react');
 
 var APP = React.createClass({
     render: function(){
-        return <h1> My App </h1>
+        return <h1> My Flux App </h1>
     }
 });
 
