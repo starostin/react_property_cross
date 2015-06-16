@@ -8,7 +8,7 @@ var Increase = React.createClass({
         AppActions.increaseItem(this.props.index)
     },
     render: function(){
-        return <button onClick={this.handleClick}> +</button>
+        return <button onClick={this.handleClick}>+</button>
     }
 });
 

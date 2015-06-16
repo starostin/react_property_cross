@@ -11,19 +11,19 @@ var AppActions = {
     removeItem: function(index){
         AppDispatcher.handleViewAction({
             actionType: AppConstants.REMOVE_ITEM,
-            item: index
+            index: index
         })
     },
     increaseItem: function(index){
         AppDispatcher.handleViewAction({
             actionType: AppConstants.INCREASE_ITEM,
-            item: index
+            index: index
         })
     },
     decreaseItem: function(index){
         AppDispatcher.handleViewAction({
             actionType: AppConstants.DECREASE_ITEM,
-            item: index
+            index: index
         })
     }
 };

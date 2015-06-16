@@ -21127,26 +21127,108 @@ var AppActions = {
     removeItem: function(index){
         AppDispatcher.handleViewAction({
             actionType: AppConstants.REMOVE_ITEM,
-            item: index
+            index: index
         })
     },
     increaseItem: function(index){
         AppDispatcher.handleViewAction({
             actionType: AppConstants.INCREASE_ITEM,
-            item: index
+            index: index
         })
     },
     decreaseItem: function(index){
         AppDispatcher.handleViewAction({
             actionType: AppConstants.DECREASE_ITEM,
-            item: index
+            index: index
         })
     }
 };
 
 module.exports = AppActions;
 
-},{"../constants/app-constants":164,"../dispatcher/app-dispatcher":165}],161:[function(require,module,exports){
+},{"../constants/app-constants":168,"../dispatcher/app-dispatcher":169}],161:[function(require,module,exports){
+/** @jsx React.DOM */
+
+var React = require('react');
+var AppActions = require('../actions/app-actions');
+
+var AddToCart = React.createClass({displayName: "AddToCart",
+    handleClick: function(){
+        AppActions.addItem(this.props.item)
+    },
+    render: function(){
+        return React.createElement("button", {onClick: this.handleClick}, " Add To Cart ")
+    }
+});
+
+module.exports = AddToCart;
+
+},{"../actions/app-actions":160,"react":159}],162:[function(require,module,exports){
+var React = require('react');
+var AppStore = require('../stores/app-store');
+var RemoveFromCart = require('../components/app-removefromcart');
+var Increase = require('../components/app-increase');
+var Decrease = require('../components/app-decrease');
+
+function cartItems(){
+    return {items: AppStore.getCart()}
+}
+var Cart = React.createClass({displayName: "Cart",
+    getInitialState: function(){
+        return cartItems();
+    },
+    componentWillMount: function(){
+        AppStore.addChangeListener(this._onChange)
+    },
+    _onChange: function(){
+        this.setState(cartItems())
+    },
+    render: function(){
+        var total = 0;
+        var items = this.state.items.map(function(item, i){
+            var subtotal = item.cost * item.qty;
+            total += subtotal;
+            return (
+                React.createElement("tr", {key: i}, 
+                    React.createElement("td", null, React.createElement(RemoveFromCart, {index: i})), 
+                    React.createElement("td", null, item.title), 
+                    React.createElement("td", null, item.qty), 
+                    React.createElement("td", null, 
+                        React.createElement(Increase, {index: i}), 
+                        React.createElement(Decrease, {index: i})
+                    ), 
+                    React.createElement("td", null, "$", subtotal)
+                )
+            )
+        });
+        return (
+            React.createElement("table", {className: "table table-hover"}, 
+                React.createElement("thead", null, 
+                    React.createElement("tr", null, 
+                        React.createElement("th", null), 
+                        React.createElement("th", null, "Item"), 
+                        React.createElement("th", null, "Qty"), 
+                        React.createElement("th", null), 
+                        React.createElement("th", null, "Subtotal")
+                    )
+                ), 
+                React.createElement("tbody", null, 
+                items
+                ), 
+                React.createElement("tfoot", null, 
+                React.createElement("tr", null, 
+                    React.createElement("td", {colspan: "4", className: "text-right"}, "Total"), 
+                    React.createElement("td", null, total)
+                )
+                )
+            )
+        )
+    }
+});
+
+module.exports = Cart;
+
+},{"../components/app-decrease":164,"../components/app-increase":165,"../components/app-removefromcart":166,"../stores/app-store":171,"react":159}],163:[function(require,module,exports){
 var React = require('react');
 var AppStore = require('../stores/app-store');
 var AddToCart = require('../components/app-addtocart');
@@ -21172,35 +21254,73 @@ var Catalog = React.createClass({displayName: "Catalog",
 
 module.exports = Catalog;
 
-},{"../components/app-addtocart":162,"../stores/app-store":167,"react":159}],162:[function(require,module,exports){
+},{"../components/app-addtocart":161,"../stores/app-store":171,"react":159}],164:[function(require,module,exports){
 /** @jsx React.DOM */
 
 var React = require('react');
 var AppActions = require('../actions/app-actions');
 
-var AddToCart = React.createClass({displayName: "AddToCart",
+var Decrease = React.createClass({displayName: "Decrease",
     handleClick: function(){
-        AppActions.addItem(this.props.item)
+        AppActions.decreaseItem(this.props.index)
     },
     render: function(){
-        return React.createElement("button", {onClick: this.handleClick}, " Add To Cart ")
+        return React.createElement("button", {onClick: this.handleClick}, "-")
     }
 });
 
-module.exports = AddToCart;
+module.exports = Decrease;
 
-},{"../actions/app-actions":160,"react":159}],163:[function(require,module,exports){
+},{"../actions/app-actions":160,"react":159}],165:[function(require,module,exports){
 /** @jsx React.DOM */
 
 var React = require('react');
 var AppActions = require('../actions/app-actions');
-var Catalog = require('../components/ap-catalog');
+
+var Increase = React.createClass({displayName: "Increase",
+    handleClick: function(){
+        AppActions.increaseItem(this.props.index)
+    },
+    render: function(){
+        return React.createElement("button", {onClick: this.handleClick}, "+")
+    }
+});
+
+module.exports = Increase;
+
+},{"../actions/app-actions":160,"react":159}],166:[function(require,module,exports){
+/** @jsx React.DOM */
+
+var React = require('react');
+var AppActions = require('../actions/app-actions');
+
+var RemoveFromCart = React.createClass({displayName: "RemoveFromCart",
+    handleClick: function(){
+        AppActions.removeItem(this.props.index)
+    },
+    render: function(){
+        return React.createElement("button", {onClick: this.handleClick}, "  X ")
+    }
+});
+
+module.exports = RemoveFromCart;
+
+},{"../actions/app-actions":160,"react":159}],167:[function(require,module,exports){
+/** @jsx React.DOM */
+
+var React = require('react');
+var AppActions = require('../actions/app-actions');
+var Catalog = require('../components/app-catalog');
+var Cart = require('../components/app-cart');
 
 var APP = React.createClass({displayName: "APP",
     render: function(){
         return (
             React.createElement("div", null, 
-                React.createElement(Catalog, null)
+                React.createElement("h1", null, "Catalog"), 
+                React.createElement(Catalog, null), 
+                React.createElement("h1", null, "Cart"), 
+                React.createElement(Cart, null)
             )
         )
     }
@@ -21208,7 +21328,7 @@ var APP = React.createClass({displayName: "APP",
 
 module.exports = APP;
 
-},{"../actions/app-actions":160,"../components/ap-catalog":161,"react":159}],164:[function(require,module,exports){
+},{"../actions/app-actions":160,"../components/app-cart":162,"../components/app-catalog":163,"react":159}],168:[function(require,module,exports){
 module.exports = {
     ADD_ITEM: 'ADD_ITEM',
     REMOVE_ITEM: 'REMOVE_ITEM',
@@ -21216,13 +21336,12 @@ module.exports = {
     DECREASE_ITEM: 'DECREASE_ITEM'
 };
 
-},{}],165:[function(require,module,exports){
+},{}],169:[function(require,module,exports){
 var Dispatcher = require('./dispatcher');
 var assign = require('object-assign');
 
 var AppDispatcher = assign({}, Dispatcher.prototype, {
     handleViewAction: function(action){
-        console.log('--------------action----------', action)
         this.dispatch({
             source: 'VIEW_ACTION',
             action: action
@@ -21231,7 +21350,7 @@ var AppDispatcher = assign({}, Dispatcher.prototype, {
 });
 module.exports = AppDispatcher;
 
-},{"./dispatcher":166,"object-assign":4}],166:[function(require,module,exports){
+},{"./dispatcher":170,"object-assign":4}],170:[function(require,module,exports){
 var Promise = require('es6-promise').Promise;
 var assign = require('object-assign');
 
@@ -21288,7 +21407,7 @@ Dispatcher.prototype = assign({}, Dispatcher.prototype, {
 
 module.exports = Dispatcher;
 
-},{"es6-promise":3,"object-assign":4}],167:[function(require,module,exports){
+},{"es6-promise":3,"object-assign":4}],171:[function(require,module,exports){
 var AppDispatcher = require('../dispatcher/app-dispatcher');
 var AppConstants = require('../constants/app-constants');
 var assign = require('object-assign');
@@ -21351,20 +21470,24 @@ var AppStore = assign({}, EventEmitter.prototype, {
     getCatalog: function(){
         return _catalog;
     },
-    dispatcherIndex:AppDispatcher.register(function(payload){
+    dispatcherIndex: AppDispatcher.register(function(payload){
         var action = payload.action;
         switch (action.actionType){
             case AppConstants.ADD_ITEM:
                 _addItem(payload.action.item);
+                AppStore.emitChange();
                 break;
             case AppConstants.REMOVE_ITEM:
                 _removeItem(payload.action.index);
+                AppStore.emitChange();
                 break;
             case AppConstants.INCREASE_ITEM:
                 _increaseItem(payload.action.index);
+                AppStore.emitChange();
                 break;
             case AppConstants.DECREASE_ITEM:
                 _decreaseItem(payload.action.index);
+                AppStore.emitChange();
                 break;
         }
         return true;
@@ -21373,7 +21496,7 @@ var AppStore = assign({}, EventEmitter.prototype, {
 
 module.exports = AppStore;
 
-},{"../constants/app-constants":164,"../dispatcher/app-dispatcher":165,"events":1,"object-assign":4}],168:[function(require,module,exports){
+},{"../constants/app-constants":168,"../dispatcher/app-dispatcher":169,"events":1,"object-assign":4}],172:[function(require,module,exports){
 /** @jsx React.DOM */
 
 var APP = require('./components/app.js');
@@ -21384,4 +21507,4 @@ React.render(
     document.getElementById('main')
 );
 
-},{"./components/app.js":163,"react":159}]},{},[168]);
+},{"./components/app.js":167,"react":159}]},{},[172]);
