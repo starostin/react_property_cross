@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 var React = require('react');
-var AppActions = require('../actions/app-actions');
+var AppActions = require('../../actions/app-actions');
 
 var AddToCart = React.createClass({
     handleClick: function(){

@@ -5,6 +5,14 @@ var gulp = require('gulp');
 var concat = require('gulp-concat');
 var reactify = require('reactify');
 var source = require('vinyl-source-stream');
+var browserSync = require('browser-sync').create(),
+    browserSyncOptions = {
+        server: {
+            baseDir: 'build'
+        },
+        port: 9000,
+        tunnel: true
+    };
 
 
 //gulp.task('browserify', function(){
@@ -13,6 +21,9 @@ var source = require('vinyl-source-stream');
 //        .pipe(concat('index.js'))
 //        .pipe(gulp.dest('build'));
 //});
+gulp.task('browser-sync', function() {
+    browserSync.init(browserSyncOptions);
+});
 gulp.task('browserify', function(){
     var b = browserify();
     b.transform(reactify); // use the reactify transform
@@ -40,14 +51,6 @@ gulp.task('watch', function(){
 //var imagemin = require('gulp-imagemin');
 //var minifycss = require('gulp-minify-css');
 //var size      = require('gulp-size');
-//var browserSync = require('browser-sync').create(),
-//    browserSyncOptions = {
-//        server: {
-//            baseDir: 'www'
-//        },
-//        port: 9000,
-//        tunnel: true
-//    };
 //var webserver = require('gulp-webserver'),
 //    serverConfig = {
 //        port: 9000,
@@ -91,9 +94,6 @@ gulp.task('watch', function(){
 //gulp.task('webserver', function() {
 //    gulp.src('www')
 //        .pipe(webserver(serverConfig));
-//});
-//gulp.task('browser-sync', function() {
-//    browserSync.init(browserSyncOptions);
 //});
 //// Watch Files For Changes
 //gulp.task('watch', function() {

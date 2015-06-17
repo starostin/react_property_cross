@@ -21151,24 +21151,31 @@ module.exports = AppActions;
 
 var React = require('react');
 var AppActions = require('../actions/app-actions');
+var Catalog = require('./catalog/app-catalog');
+var Cart = require('./cart/app-cart');
 
-var AddToCart = React.createClass({displayName: "AddToCart",
-    handleClick: function(){
-        AppActions.addItem(this.props.item)
-    },
+var APP = React.createClass({displayName: "APP",
     render: function(){
-        return React.createElement("button", {onClick: this.handleClick}, " Add To Cart ")
+        return (
+            React.createElement("div", null, 
+                React.createElement("h1", null, "Catalog"), 
+                React.createElement(Catalog, null), 
+                React.createElement("h1", null, "Cart"), 
+                React.createElement(Cart, null)
+            )
+        )
     }
 });
 
-module.exports = AddToCart;
+module.exports = APP;
 
-},{"../actions/app-actions":160,"react":159}],162:[function(require,module,exports){
+},{"../actions/app-actions":160,"./cart/app-cart":162,"./catalog/app-catalog":167,"react":159}],162:[function(require,module,exports){
+/** @jsx React.DOM */
 var React = require('react');
-var AppStore = require('../stores/app-store');
-var RemoveFromCart = require('../components/app-removefromcart');
-var Increase = require('../components/app-increase');
-var Decrease = require('../components/app-decrease');
+var AppStore = require('../../stores/app-store');
+var RemoveFromCart = require('./app-removefromcart');
+var Increase = require('./app-increase');
+var Decrease = require('./app-decrease');
 
 function cartItems(){
     return {items: AppStore.getCart()}
@@ -21228,10 +21235,79 @@ var Cart = React.createClass({displayName: "Cart",
 
 module.exports = Cart;
 
-},{"../components/app-decrease":164,"../components/app-increase":165,"../components/app-removefromcart":166,"../stores/app-store":171,"react":159}],163:[function(require,module,exports){
+},{"../../stores/app-store":171,"./app-decrease":163,"./app-increase":164,"./app-removefromcart":165,"react":159}],163:[function(require,module,exports){
+/** @jsx React.DOM */
+
 var React = require('react');
-var AppStore = require('../stores/app-store');
-var AddToCart = require('../components/app-addtocart');
+var AppActions = require('../../actions/app-actions');
+
+var Decrease = React.createClass({displayName: "Decrease",
+    handleClick: function(){
+        AppActions.decreaseItem(this.props.index)
+    },
+    render: function(){
+        return React.createElement("button", {onClick: this.handleClick}, "-")
+    }
+});
+
+module.exports = Decrease;
+
+},{"../../actions/app-actions":160,"react":159}],164:[function(require,module,exports){
+/** @jsx React.DOM */
+
+var React = require('react');
+var AppActions = require('../../actions/app-actions');
+
+var Increase = React.createClass({displayName: "Increase",
+    handleClick: function(){
+        AppActions.increaseItem(this.props.index)
+    },
+    render: function(){
+        return React.createElement("button", {onClick: this.handleClick}, "+")
+    }
+});
+
+module.exports = Increase;
+
+},{"../../actions/app-actions":160,"react":159}],165:[function(require,module,exports){
+/** @jsx React.DOM */
+
+var React = require('react');
+var AppActions = require('../../actions/app-actions');
+
+var RemoveFromCart = React.createClass({displayName: "RemoveFromCart",
+    handleClick: function(){
+        AppActions.removeItem(this.props.index)
+    },
+    render: function(){
+        return React.createElement("button", {onClick: this.handleClick}, "  X ")
+    }
+});
+
+module.exports = RemoveFromCart;
+
+},{"../../actions/app-actions":160,"react":159}],166:[function(require,module,exports){
+/** @jsx React.DOM */
+
+var React = require('react');
+var AppActions = require('../../actions/app-actions');
+
+var AddToCart = React.createClass({displayName: "AddToCart",
+    handleClick: function(){
+        AppActions.addItem(this.props.item)
+    },
+    render: function(){
+        return React.createElement("button", {onClick: this.handleClick}, " Add To Cart ")
+    }
+});
+
+module.exports = AddToCart;
+
+},{"../../actions/app-actions":160,"react":159}],167:[function(require,module,exports){
+/** @jsx React.DOM */
+var React = require('react');
+var AppStore = require('../../stores/app-store');
+var AddToCart = require('./app-addtocart');
 
 function getCatalog(){
     return {items: AppStore.getCatalog()}
@@ -21254,81 +21330,7 @@ var Catalog = React.createClass({displayName: "Catalog",
 
 module.exports = Catalog;
 
-},{"../components/app-addtocart":161,"../stores/app-store":171,"react":159}],164:[function(require,module,exports){
-/** @jsx React.DOM */
-
-var React = require('react');
-var AppActions = require('../actions/app-actions');
-
-var Decrease = React.createClass({displayName: "Decrease",
-    handleClick: function(){
-        AppActions.decreaseItem(this.props.index)
-    },
-    render: function(){
-        return React.createElement("button", {onClick: this.handleClick}, "-")
-    }
-});
-
-module.exports = Decrease;
-
-},{"../actions/app-actions":160,"react":159}],165:[function(require,module,exports){
-/** @jsx React.DOM */
-
-var React = require('react');
-var AppActions = require('../actions/app-actions');
-
-var Increase = React.createClass({displayName: "Increase",
-    handleClick: function(){
-        AppActions.increaseItem(this.props.index)
-    },
-    render: function(){
-        return React.createElement("button", {onClick: this.handleClick}, "+")
-    }
-});
-
-module.exports = Increase;
-
-},{"../actions/app-actions":160,"react":159}],166:[function(require,module,exports){
-/** @jsx React.DOM */
-
-var React = require('react');
-var AppActions = require('../actions/app-actions');
-
-var RemoveFromCart = React.createClass({displayName: "RemoveFromCart",
-    handleClick: function(){
-        AppActions.removeItem(this.props.index)
-    },
-    render: function(){
-        return React.createElement("button", {onClick: this.handleClick}, "  X ")
-    }
-});
-
-module.exports = RemoveFromCart;
-
-},{"../actions/app-actions":160,"react":159}],167:[function(require,module,exports){
-/** @jsx React.DOM */
-
-var React = require('react');
-var AppActions = require('../actions/app-actions');
-var Catalog = require('../components/app-catalog');
-var Cart = require('../components/app-cart');
-
-var APP = React.createClass({displayName: "APP",
-    render: function(){
-        return (
-            React.createElement("div", null, 
-                React.createElement("h1", null, "Catalog"), 
-                React.createElement(Catalog, null), 
-                React.createElement("h1", null, "Cart"), 
-                React.createElement(Cart, null)
-            )
-        )
-    }
-});
-
-module.exports = APP;
-
-},{"../actions/app-actions":160,"../components/app-cart":162,"../components/app-catalog":163,"react":159}],168:[function(require,module,exports){
+},{"../../stores/app-store":171,"./app-addtocart":166,"react":159}],168:[function(require,module,exports){
 module.exports = {
     ADD_ITEM: 'ADD_ITEM',
     REMOVE_ITEM: 'REMOVE_ITEM',
@@ -21415,11 +21417,17 @@ var EventEmitter = require('events').EventEmitter;
 
 var CHANGE_EVENT = 'change';
 
-var _catalog = [
-    {id: 1, title: 'Widget #1', cost: 1},
-    {id: 2, title: 'Widget #2', cost: 2},
-    {id: 3, title: 'Widget #3', cost: 3}
-];
+var _catalog = [];
+for (var i=0; i<9; i++){
+    _catalog.push({
+        id: 'Widget' + i,
+        title: 'Widget #' + i,
+        summary: 'This is widget!',
+        description: 'Test test test',
+        img: 'assets/product.png',
+        cost: i
+    })
+}
 
 var _carItems = [];
 
@@ -21507,4 +21515,4 @@ React.render(
     document.getElementById('main')
 );
 
-},{"./components/app.js":167,"react":159}]},{},[172]);
+},{"./components/app.js":161,"react":159}]},{},[172]);
