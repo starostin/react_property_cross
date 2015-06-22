@@ -30,13 +30,15 @@
   "dependencies": {
     "browserify": "^10.2.3",
     "es6-promise": "^2.1.1",
+    "flux": "~2.0.3",
     "gulp": "^3.9.0",
     "gulp-browserify": "^0.5.1",
-    "react": "^0.13.3",
-    "reactify": "^1.1.1",
-    "vinyl-source-stream": "^1.1.0",
-    "object-assign": "~3.0.0",
     "keymirror": "~0.1.1",
-    "flux": "~2.0.3"
+    "object-assign": "~3.0.0",
+    "react": "^0.13.3",
+    "react-async": "^2.1.0",
+    "react-router-component": "^0.25.1",
+    "reactify": "^1.1.1",
+    "vinyl-source-stream": "^1.1.0"
   }
 }
