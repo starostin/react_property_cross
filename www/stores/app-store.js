@@ -12,12 +12,21 @@ for (var i=0; i<9; i++){
         title: 'Widget #' + i,
         summary: 'This is widget!',
         description: 'Test test test',
-        img: 'assets/product.png',
+        img: 'assets/product.jpg',
         cost: i
     })
 }
 
 var _carItems = [];
+
+function _cartTotals(){
+    var qty = 0, total = 0;
+    _carItems.forEach(function(cartItem){
+        qty+=cartItem.qty;
+        total+=cartItem.qty*cartItem.cost;
+    });
+    return {qty: qty, total: total}
+}
 
 function _removeItem(index){
     _carItems[index].inCart = false;
@@ -65,6 +74,9 @@ var AppStore = assign({}, EventEmitter.prototype, {
     },
     getCatalog: function(){
         return _catalog;
+    },
+    getCartTotals: function(){
+        return _cartTotals();
     },
     dispatcherIndex: AppDispatcher.register(function(payload){
         var action = payload.action;

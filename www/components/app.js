@@ -18,7 +18,7 @@ var APP = React.createClass({
                 <Locations>
                     <Location path="/" handler={Catalog}></Location>
                     <Location path="/cart" handler={Cart}></Location>
-                    <Location path="item/:item" handler={CatalogDetail}></Location>
+                    <Location path="/item/:item" handler={CatalogDetail}></Location>
                 </Locations>
             </Template>
         )

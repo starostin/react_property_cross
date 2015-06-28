@@ -400,7 +400,7 @@ process.umask = function() { return 0; };
  * @copyright Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors (Conversion to ES6 API by Jake Archibald)
  * @license   Licensed under MIT license
  *            See https://raw.githubusercontent.com/jakearchibald/es6-promise/master/LICENSE
- * @version   2.1.1
+ * @version   2.3.0
  */
 
 (function() {
@@ -430,7 +430,9 @@ process.umask = function() { return 0; };
     var lib$es6$promise$asap$$len = 0;
     var lib$es6$promise$asap$$toString = {}.toString;
     var lib$es6$promise$asap$$vertxNext;
-    function lib$es6$promise$asap$$asap(callback, arg) {
+    var lib$es6$promise$asap$$customSchedulerFn;
+
+    var lib$es6$promise$asap$$asap = function asap(callback, arg) {
       lib$es6$promise$asap$$queue[lib$es6$promise$asap$$len] = callback;
       lib$es6$promise$asap$$queue[lib$es6$promise$asap$$len + 1] = arg;
       lib$es6$promise$asap$$len += 2;
@@ -438,11 +440,21 @@ process.umask = function() { return 0; };
         // If len is 2, that means that we need to schedule an async flush.
         // If additional callbacks are queued before the queue is flushed, they
         // will be processed by this flush that we are scheduling.
-        lib$es6$promise$asap$$scheduleFlush();
+        if (lib$es6$promise$asap$$customSchedulerFn) {
+          lib$es6$promise$asap$$customSchedulerFn(lib$es6$promise$asap$$flush);
+        } else {
+          lib$es6$promise$asap$$scheduleFlush();
+        }
       }
     }
 
-    var lib$es6$promise$asap$$default = lib$es6$promise$asap$$asap;
+    function lib$es6$promise$asap$$setScheduler(scheduleFn) {
+      lib$es6$promise$asap$$customSchedulerFn = scheduleFn;
+    }
+
+    function lib$es6$promise$asap$$setAsap(asapFn) {
+      lib$es6$promise$asap$$asap = asapFn;
+    }
 
     var lib$es6$promise$asap$$browserWindow = (typeof window !== 'undefined') ? window : undefined;
     var lib$es6$promise$asap$$browserGlobal = lib$es6$promise$asap$$browserWindow || {};
@@ -575,7 +587,7 @@ process.umask = function() { return 0; };
     }
 
     function lib$es6$promise$$internal$$handleForeignThenable(promise, thenable, then) {
-       lib$es6$promise$asap$$default(function(promise) {
+       lib$es6$promise$asap$$asap(function(promise) {
         var sealed = false;
         var error = lib$es6$promise$$internal$$tryThen(then, thenable, function(value) {
           if (sealed) { return; }
@@ -656,7 +668,7 @@ process.umask = function() { return 0; };
       promise._state = lib$es6$promise$$internal$$FULFILLED;
 
       if (promise._subscribers.length !== 0) {
-        lib$es6$promise$asap$$default(lib$es6$promise$$internal$$publish, promise);
+        lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publish, promise);
       }
     }
 
@@ -665,7 +677,7 @@ process.umask = function() { return 0; };
       promise._state = lib$es6$promise$$internal$$REJECTED;
       promise._result = reason;
 
-      lib$es6$promise$asap$$default(lib$es6$promise$$internal$$publishRejection, promise);
+      lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publishRejection, promise);
     }
 
     function lib$es6$promise$$internal$$subscribe(parent, child, onFulfillment, onRejection) {
@@ -679,7 +691,7 @@ process.umask = function() { return 0; };
       subscribers[length + lib$es6$promise$$internal$$REJECTED]  = onRejection;
 
       if (length === 0 && parent._state) {
-        lib$es6$promise$asap$$default(lib$es6$promise$$internal$$publish, parent);
+        lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publish, parent);
       }
     }
 
@@ -936,7 +948,7 @@ process.umask = function() { return 0; };
     /**
       Promise objects represent the eventual result of an asynchronous operation. The
       primary way of interacting with a promise is through its `then` method, which
-      registers callbacks to receive either a promise’s eventual value or the reason
+      registers callbacks to receive either a promise's eventual value or the reason
       why the promise cannot be fulfilled.
 
       Terminology
@@ -1059,6 +1071,9 @@ process.umask = function() { return 0; };
     lib$es6$promise$promise$$Promise.race = lib$es6$promise$promise$race$$default;
     lib$es6$promise$promise$$Promise.resolve = lib$es6$promise$promise$resolve$$default;
     lib$es6$promise$promise$$Promise.reject = lib$es6$promise$promise$reject$$default;
+    lib$es6$promise$promise$$Promise._setScheduler = lib$es6$promise$asap$$setScheduler;
+    lib$es6$promise$promise$$Promise._setAsap = lib$es6$promise$asap$$setAsap;
+    lib$es6$promise$promise$$Promise._asap = lib$es6$promise$asap$$asap;
 
     lib$es6$promise$promise$$Promise.prototype = {
       constructor: lib$es6$promise$promise$$Promise,
@@ -1269,7 +1284,7 @@ process.umask = function() { return 0; };
 
         if (state) {
           var callback = arguments[state - 1];
-          lib$es6$promise$asap$$default(function(){
+          lib$es6$promise$asap$$asap(function(){
             lib$es6$promise$$internal$$invokeCallback(state, child, callback, result);
           });
         } else {
@@ -1465,7 +1480,9 @@ var environment               = require('./lib/environment');
 
 var CaptureClicks             = require('./lib/CaptureClicks');
 
-module.exports = {
+var URLPattern                = require('url-pattern');
+
+var exportsObject = {
   Locations: Router.Locations,
   Pages: Router.Pages,
 
@@ -1482,10 +1499,22 @@ module.exports = {
   AsyncRouteRenderingMixin: AsyncRouteRenderingMixin,
 
   NavigatableMixin: NavigatableMixin,
-  CaptureClicks: CaptureClicks
+  CaptureClicks: CaptureClicks,
+
+  // The fn used to create a compiler for "/user/:id"-style routes is exposed here so it can be overridden.
+  createURLPatternCompiler: function() {
+    return new URLPattern.Compiler();
+  },
+
+  // For ES6 imports, which can't modify module.exports directly
+  setCreateURLPatternCompilerFactory: function(fn) {
+    exportsObject.createURLPatternCompiler = fn;
+  }
 };
 
-},{"./lib/AsyncRouteRenderingMixin":8,"./lib/CaptureClicks":9,"./lib/Link":10,"./lib/NavigatableMixin":11,"./lib/Route":12,"./lib/RouteRenderingMixin":13,"./lib/Router":14,"./lib/RouterMixin":15,"./lib/environment":20}],8:[function(require,module,exports){
+module.exports = exportsObject;
+
+},{"./lib/AsyncRouteRenderingMixin":8,"./lib/CaptureClicks":9,"./lib/Link":10,"./lib/NavigatableMixin":11,"./lib/Route":12,"./lib/RouteRenderingMixin":13,"./lib/Router":14,"./lib/RouterMixin":15,"./lib/environment":20,"url-pattern":28}],8:[function(require,module,exports){
 "use strict";
 
 var assign              = Object.assign || require('object.assign');
@@ -1504,7 +1533,7 @@ var AsyncRouteRenderingMixin = {
     var currentHandler = this.state && this.state.handler;
     var nextHandler = state && state.handler;
 
-    if (nextHandler && nextHandler.type && 
+    if (nextHandler && nextHandler.type &&
         isAsyncComponent(nextHandler) &&
         // if component's type is the same we would need to skip async state
         // update
@@ -1608,7 +1637,7 @@ var CaptureClicks = React.createClass({
 
     // Ignore the click if it's a download link. (We use this method of
     // detecting the presence of the attribute for old IE versions.)
-    if (!!el.attributes.download) {
+    if (el.attributes.download) {
       return;
     }
 
@@ -1898,7 +1927,7 @@ function createRouter(name, component) {
     getDefaultProps: function() {
       return {
         component: component
-      }
+      };
     },
 
     render: function() {
@@ -1916,7 +1945,7 @@ module.exports = {
   createRouter: createRouter,
   Locations: createRouter('Locations', 'div'),
   Pages: createRouter('Pages', 'body')
-}
+};
 
 },{"./AsyncRouteRenderingMixin":8,"./RouterMixin":15,"object.assign":23,"react":187}],15:[function(require,module,exports){
 "use strict";
@@ -1973,7 +2002,7 @@ var RouterMixin = {
       invariant(
         props.path ||
         isString(parentMatch.unmatchedPath) ||
-        parentMatch.matchedPath == parentMatch.path,
+        parentMatch.matchedPath === parentMatch.path,
         "contextual router has nothing to match on: %s", parentMatch.unmatchedPath
       );
 
@@ -2210,15 +2239,15 @@ Environment.prototype.notify = function notify(navigation, cb) {
       this.routers[i].setPath(this.path, navigation, callback);
     }
   }.bind(this));
-}
+};
 
 Environment.prototype.makeHref = function makeHref(path) {
   return path;
-}
+};
 
 Environment.prototype.navigate = function navigate(path, navigation, cb) {
   return this.setPath(path, navigation, cb);
-}
+};
 
 Environment.prototype.setPath = function(path, navigation, cb) {
   // Support (path, cb) arity.
@@ -2238,7 +2267,7 @@ Environment.prototype.setPath = function(path, navigation, cb) {
   }
   this.path = path;
   this.notify(navigation, cb);
-}
+};
 
 /**
  * Register router with an environment.
@@ -2251,7 +2280,7 @@ Environment.prototype.register = function register(router) {
   if (router.getParentRouter === undefined || !router.getParentRouter()) {
     this.routers.push(router);
   }
-}
+};
 
 /**
  * Unregister router from an environment.
@@ -2264,7 +2293,7 @@ Environment.prototype.unregister = function unregister(router) {
   if (this.routers.length === 0) {
     this.stop();
   }
-}
+};
 
 module.exports = Environment;
 
@@ -2290,12 +2319,12 @@ HashEnvironment.prototype.getPath = function() {
 
 HashEnvironment.prototype.pushState = function(path, navigation) {
   window.location.hash = path;
-}
+};
 
 HashEnvironment.prototype.replaceState = function(path, navigation) {
   var href = window.location.href.replace(/(javascript:|#).*$/, '');
   window.location.replace(href + '#' + path);
-}
+};
 
 HashEnvironment.prototype.start = function() {
   if (window.addEventListener) {
@@ -2344,7 +2373,7 @@ PathnameEnvironment.prototype.constructor = PathnameEnvironment;
 
 PathnameEnvironment.prototype.getPath = function() {
   return window.location.pathname;
-}
+};
 
 PathnameEnvironment.prototype.pushState = function(path, navigation) {
   if (this.useHistoryApi) {
@@ -2352,7 +2381,7 @@ PathnameEnvironment.prototype.pushState = function(path, navigation) {
   } else {
     window.location.pathname = path;
   }
-}
+};
 
 PathnameEnvironment.prototype.replaceState = function(path, navigation) {
   if (this.useHistoryApi) {
@@ -2360,7 +2389,7 @@ PathnameEnvironment.prototype.replaceState = function(path, navigation) {
   } else {
     window.location.pathname = path;
   }
-}
+};
 
 PathnameEnvironment.prototype.start = function() {
   if (this.useHistoryApi && window.addEventListener) {
@@ -2471,6 +2500,8 @@ var assign = Object.assign || require('object.assign');
  * @param {String} path
  */
 function matchRoutes(routes, path) {
+  var createCompiler = require('../index').createURLPatternCompiler;
+
   var match, page, notFound;
 
   if (!Array.isArray(routes)) {
@@ -2485,12 +2516,11 @@ function matchRoutes(routes, path) {
     if (process.env.NODE_ENV !== "production") {
       invariant(
         current.props.handler !== undefined && current.props.path !== undefined,
-        "Router should contain either Route or NotFound components " +
-        "as routes")
+        "Router should contain either Route or NotFound components as routes");
     }
 
     if (current.props.path) {
-      current.props.pattern = current.props.pattern || new URLPattern(current.props.path);
+      current.props.pattern = current.props.pattern || new URLPattern(current.props.path, createCompiler(current.props));
       if (!page) {
         match = current.props.pattern.match(path);
         if (match) {
@@ -2570,12 +2600,12 @@ Match.prototype.getHandler = function() {
   // Passed a component descriptor - create an element. Assign it the ref
   // from the <Location> tag.
   return React.createElement(handler, props);
-}
+};
 
 module.exports = matchRoutes;
 
 }).call(this,require('_process'))
-},{"_process":2,"object.assign":23,"react":187,"react/lib/cloneWithProps":139,"react/lib/invariant":166,"url-pattern":28}],22:[function(require,module,exports){
+},{"../index":7,"_process":2,"object.assign":23,"react":187,"react/lib/cloneWithProps":139,"react/lib/invariant":166,"url-pattern":28}],22:[function(require,module,exports){
 var keys = require('object-keys');
 
 module.exports = function hasSymbols() {
@@ -23075,7 +23105,7 @@ var AppActions = {
 
 module.exports = AppActions;
 
-},{"../constants/app-constants":200,"../dispatcher/app-dispatcher":201}],189:[function(require,module,exports){
+},{"../constants/app-constants":201,"../dispatcher/app-dispatcher":202}],189:[function(require,module,exports){
 /** @jsx React.DOM */
 var React = require('react');
 var Header = require('./header/app-header');
@@ -23093,7 +23123,7 @@ var Template = React.createClass({displayName: "Template",
 
 module.exports = Template;
 
-},{"./header/app-header":198,"react":187}],190:[function(require,module,exports){
+},{"./header/app-header":199,"react":187}],190:[function(require,module,exports){
 /** @jsx React.DOM */
 
 var React = require('react');
@@ -23114,7 +23144,7 @@ var APP = React.createClass({displayName: "APP",
                 React.createElement(Locations, null, 
                     React.createElement(Location, {path: "/", handler: Catalog}), 
                     React.createElement(Location, {path: "/cart", handler: Cart}), 
-                    React.createElement(Location, {path: "item/:item", handler: CatalogDetail})
+                    React.createElement(Location, {path: "/item/:item", handler: CatalogDetail})
                 )
             )
         )
@@ -23123,7 +23153,7 @@ var APP = React.createClass({displayName: "APP",
 
 module.exports = APP;
 
-},{"../actions/app-actions":188,"./app-template":189,"./cart/app-cart":191,"./catalog/app-catalog":196,"./product/app-catalogdetail":199,"react":187,"react-router-component":7}],191:[function(require,module,exports){
+},{"../actions/app-actions":188,"./app-template":189,"./cart/app-cart":191,"./catalog/app-catalog":196,"./product/app-catalogdetail":200,"react":187,"react-router-component":7}],191:[function(require,module,exports){
 /** @jsx React.DOM */
 var React = require('react');
 var AppStore = require('../../stores/app-store');
@@ -23131,6 +23161,7 @@ var RemoveFromCart = require('./app-removefromcart');
 var Increase = require('./app-increase');
 var Decrease = require('./app-decrease');
 var StoreWatchMixin =  require('../../mixins/StoreWatchMixin');
+var Link =  require('react-router-component').Link;
 
 function cartItems(){
     return {items: AppStore.getCart()}
@@ -23156,25 +23187,28 @@ var Cart = React.createClass({displayName: "Cart",
             )
         });
         return (
-            React.createElement("table", {className: "table table-hover"}, 
-                React.createElement("thead", null, 
+            React.createElement("div", null, 
+                React.createElement("table", {className: "table table-hover"}, 
+                    React.createElement("thead", null, 
+                        React.createElement("tr", null, 
+                            React.createElement("th", null), 
+                            React.createElement("th", null, "Item"), 
+                            React.createElement("th", null, "Qty"), 
+                            React.createElement("th", null), 
+                            React.createElement("th", null, "Subtotal")
+                        )
+                    ), 
+                    React.createElement("tbody", null, 
+                    items
+                    ), 
+                    React.createElement("tfoot", null, 
                     React.createElement("tr", null, 
-                        React.createElement("th", null), 
-                        React.createElement("th", null, "Item"), 
-                        React.createElement("th", null, "Qty"), 
-                        React.createElement("th", null), 
-                        React.createElement("th", null, "Subtotal")
+                        React.createElement("td", {colspan: "4", className: "text-right"}, "Total"), 
+                        React.createElement("td", null, total)
+                    )
                     )
                 ), 
-                React.createElement("tbody", null, 
-                items
-                ), 
-                React.createElement("tfoot", null, 
-                React.createElement("tr", null, 
-                    React.createElement("td", {colspan: "4", className: "text-right"}, "Total"), 
-                    React.createElement("td", null, total)
-                )
-                )
+                React.createElement(Link, {href: "/"}, " Continue Shopping ")
             )
         )
     }
@@ -23182,7 +23216,7 @@ var Cart = React.createClass({displayName: "Cart",
 
 module.exports = Cart;
 
-},{"../../mixins/StoreWatchMixin":203,"../../stores/app-store":204,"./app-decrease":192,"./app-increase":193,"./app-removefromcart":194,"react":187}],192:[function(require,module,exports){
+},{"../../mixins/StoreWatchMixin":204,"../../stores/app-store":205,"./app-decrease":192,"./app-increase":193,"./app-removefromcart":194,"react":187,"react-router-component":7}],192:[function(require,module,exports){
 /** @jsx React.DOM */
 
 var React = require('react');
@@ -23244,7 +23278,7 @@ var AddToCart = React.createClass({displayName: "AddToCart",
         AppActions.addItem(this.props.item)
     },
     render: function(){
-        return React.createElement("button", {onClick: this.handleClick}, " Add To Cart ")
+        return React.createElement("button", {className: "btn btn-default", onClick: this.handleClick}, " Add To Cart ")
     }
 });
 
@@ -23255,20 +23289,20 @@ module.exports = AddToCart;
 var React = require('react');
 var AppStore = require('../../stores/app-store');
 var AddToCart = require('./app-addtocart');
+var CatalogItem = require('./app-catalogitem');
+var StoreWatchMixin =  require('../../mixins/StoreWatchMixin');
 
 function getCatalog(){
     return {items: AppStore.getCatalog()}
 }
 var Catalog = React.createClass({displayName: "Catalog",
-    getInitialState: function(){
-        return getCatalog();
-    },
+    mixins: [StoreWatchMixin(getCatalog)],
     render: function(){
         var items = this.state.items.map(function(item, index){
-            return React.createElement("tr", null, React.createElement("td", null, item.title), React.createElement("td", null, item.cost), React.createElement("td", null, React.createElement(AddToCart, {item: item})))
+            return React.createElement(CatalogItem, {item: item})
         });
         return (
-            React.createElement("table", {className: "table table-hover"}, 
+            React.createElement("div", {className: "row"}, 
                 items
             )
         )
@@ -23277,17 +23311,53 @@ var Catalog = React.createClass({displayName: "Catalog",
 
 module.exports = Catalog;
 
-},{"../../stores/app-store":204,"./app-addtocart":195,"react":187}],197:[function(require,module,exports){
+},{"../../mixins/StoreWatchMixin":204,"../../stores/app-store":205,"./app-addtocart":195,"./app-catalogitem":197,"react":187}],197:[function(require,module,exports){
+/** @jsx React.DOM */
+var React = require('react');
+var AddToCart = require('./app-addtocart');
+var Link =  require('react-router-component').Link;
+
+var CatalogItem = React.createClass({displayName: "CatalogItem",
+    render: function(){
+        var itemStyle = {
+            borderBottom: '1px solid #ccc',
+            paddingBottom: 15
+        };
+        return (
+            React.createElement("div", {className: "col-sm-3", style: itemStyle}, 
+                React.createElement("h4", null, this.props.item.title), 
+                React.createElement("img", {src: this.props.item.img, width: "200px"}), 
+                React.createElement("p", null, this.props.item.summary), 
+                React.createElement("p", null, "$", this.props.item.cost, " ", React.createElement("span", {className: "text-success"}, this.props.item.inCart && '(' + this.props.item.qty + ' item in cart)'), " "), 
+                React.createElement("div", {className: "btn-group btn-group-xs"}, 
+                    React.createElement(Link, {href: '/item/' + this.props.item.id, className: "btn btn-default"}, "Learn More"), 
+                    React.createElement(AddToCart, {item: this.props.item})
+                )
+            )
+        );
+    }
+});
+
+module.exports = CatalogItem;
+
+},{"./app-addtocart":195,"react":187,"react-router-component":7}],198:[function(require,module,exports){
 /** @jsx React.DOM */
 var React = require('react');
 var Link = require('react-router-component').Link;
+var AppStore = require('../../stores/app-store');
+var StoreWatchMixin =  require('../../mixins/StoreWatchMixin');
+
+function CartTotals(){
+    return AppStore.getCartTotals();
+}
 
 var CartSummary = React.createClass({displayName: "CartSummary",
+    mixins: [StoreWatchMixin(CartTotals)],
     render: function(){
         return (
             React.createElement("div", null, 
-                React.createElement(Link, {href: "/cart", className: "btn btn-success"}, 
-                    "Cart Items: QTY /$COST"
+                React.createElement(Link, {href: "/cart", className: "btn btn-success pull-right"}, 
+                    "Cart Items: ", this.state.qty, " / $", this.state.total
                 )
             )
         );
@@ -23296,7 +23366,7 @@ var CartSummary = React.createClass({displayName: "CartSummary",
 
 module.exports = CartSummary;
 
-},{"react":187,"react-router-component":7}],198:[function(require,module,exports){
+},{"../../mixins/StoreWatchMixin":204,"../../stores/app-store":205,"react":187,"react-router-component":7}],199:[function(require,module,exports){
 /** @jsx React.DOM */
 var React = require('react');
 var CartSummary = require('./app-cartsummary');
@@ -23305,7 +23375,7 @@ var Header = React.createClass({displayName: "Header",
     render: function(){
         return (
             React.createElement("div", {className: "row"}, 
-                React.createElement("div", {className: "cal-sm-6"}, React.createElement("h1", null, "Lets Shop")), 
+                React.createElement("div", {className: "cal-sm-6"}, React.createElement("h1", {className: "pull-left"}, "Lets Shop")), 
                 React.createElement("div", {className: "cal-sm-2 cal-sm-push"}, 
                     React.createElement("br", null), 
                     React.createElement(CartSummary, null)
@@ -23317,19 +23387,48 @@ var Header = React.createClass({displayName: "Header",
 
 module.exports = Header;
 
-},{"./app-cartsummary":197,"react":187}],199:[function(require,module,exports){
+},{"./app-cartsummary":198,"react":187}],200:[function(require,module,exports){
 /** @jsx React.DOM */
 var React = require('react');
+var AppStore = require('../../stores/app-store');
+var AddToCart = require('../catalog/app-addtocart');
+var StoreWatchMixin =  require('../../mixins/StoreWatchMixin');
+var Link =  require('react-router-component').Link;
+
+function getCatalogItem(component){
+    console.log('-=-=-=-=-=-=AAA=--=-=-=-=-==-', component)
+    var thisItem;
+    AppStore.getCatalog().forEach(function(item){
+        if(item.id.toString() === component.props.item){
+            thisItem = item;
+        }
+    });
+    console.log('------------IT---------', thisItem)
+    return {item: thisItem};
+}
 
 var CatalogDetail = React.createClass({displayName: "CatalogDetail",
+    mixins: [StoreWatchMixin(getCatalogItem)],
     render: function(){
-        return (React.createElement("h1", null, "CatalogDetail"));
+        console.log('--------ST-------------', this.state)
+        return (
+            React.createElement("div", null, 
+                React.createElement("h2", null, this.state.item.title), 
+                React.createElement("img", {src: this.state.item.img, width: "200px"}), 
+                React.createElement("p", null, this.state.item.description), 
+                React.createElement("p", null, "$", this.state.item.cost, " ", React.createElement("span", {className: "text-success"}, this.state.item.inCart && '(' + this.state.item.qty + ' item in cart)'), " "), 
+                React.createElement("div", {className: "btn-group btn-group-sm"}, 
+                    React.createElement(AddToCart, {item: this.state.item}), 
+                    React.createElement(Link, {href: "/", className: "btn btn-default"}, "Continue Shopping")
+                )
+            )
+        );
     }
 });
 
 module.exports = CatalogDetail;
 
-},{"react":187}],200:[function(require,module,exports){
+},{"../../mixins/StoreWatchMixin":204,"../../stores/app-store":205,"../catalog/app-addtocart":195,"react":187,"react-router-component":7}],201:[function(require,module,exports){
 module.exports = {
     ADD_ITEM: 'ADD_ITEM',
     REMOVE_ITEM: 'REMOVE_ITEM',
@@ -23337,7 +23436,7 @@ module.exports = {
     DECREASE_ITEM: 'DECREASE_ITEM'
 };
 
-},{}],201:[function(require,module,exports){
+},{}],202:[function(require,module,exports){
 var Dispatcher = require('./dispatcher');
 var assign = require('object-assign');
 
@@ -23351,7 +23450,7 @@ var AppDispatcher = assign({}, Dispatcher.prototype, {
 });
 module.exports = AppDispatcher;
 
-},{"./dispatcher":202,"object-assign":4}],202:[function(require,module,exports){
+},{"./dispatcher":203,"object-assign":4}],203:[function(require,module,exports){
 var Promise = require('es6-promise').Promise;
 var assign = require('object-assign');
 
@@ -23408,7 +23507,7 @@ Dispatcher.prototype = assign({}, Dispatcher.prototype, {
 
 module.exports = Dispatcher;
 
-},{"es6-promise":3,"object-assign":4}],203:[function(require,module,exports){
+},{"es6-promise":3,"object-assign":4}],204:[function(require,module,exports){
 /** @jsx React.DOM */
 
 var React = require('react');
@@ -23417,7 +23516,7 @@ var AppStore = require('../stores/app-store');
 var StoreWatchMixin = function(cb){
     return{
         getInitialState: function(){
-            return cb();
+            return cb(this);
         },
         componentWillMount: function(){
             AppStore.addChangeListener(this._onChange)
@@ -23426,14 +23525,14 @@ var StoreWatchMixin = function(cb){
             AppStore.removeChangeListener(this._onChange)
         },
         _onChange: function(){
-            this.setState(cb())
+            this.setState(cb(this))
         }
     }
 };
 
 module.exports = StoreWatchMixin;
 
-},{"../stores/app-store":204,"react":187}],204:[function(require,module,exports){
+},{"../stores/app-store":205,"react":187}],205:[function(require,module,exports){
 var AppDispatcher = require('../dispatcher/app-dispatcher');
 var AppConstants = require('../constants/app-constants');
 var assign = require('object-assign');
@@ -23448,12 +23547,21 @@ for (var i=0; i<9; i++){
         title: 'Widget #' + i,
         summary: 'This is widget!',
         description: 'Test test test',
-        img: 'assets/product.png',
+        img: 'assets/product.jpg',
         cost: i
     })
 }
 
 var _carItems = [];
+
+function _cartTotals(){
+    var qty = 0, total = 0;
+    _carItems.forEach(function(cartItem){
+        qty+=cartItem.qty;
+        total+=cartItem.qty*cartItem.cost;
+    });
+    return {qty: qty, total: total}
+}
 
 function _removeItem(index){
     _carItems[index].inCart = false;
@@ -23502,6 +23610,9 @@ var AppStore = assign({}, EventEmitter.prototype, {
     getCatalog: function(){
         return _catalog;
     },
+    getCartTotals: function(){
+        return _cartTotals();
+    },
     dispatcherIndex: AppDispatcher.register(function(payload){
         var action = payload.action;
         switch (action.actionType){
@@ -23528,7 +23639,7 @@ var AppStore = assign({}, EventEmitter.prototype, {
 
 module.exports = AppStore;
 
-},{"../constants/app-constants":200,"../dispatcher/app-dispatcher":201,"events":1,"object-assign":4}],205:[function(require,module,exports){
+},{"../constants/app-constants":201,"../dispatcher/app-dispatcher":202,"events":1,"object-assign":4}],206:[function(require,module,exports){
 /** @jsx React.DOM */
 
 var APP = require('./components/app.js');
@@ -23539,4 +23650,4 @@ React.render(
     document.getElementById('main')
 );
 
-},{"./components/app.js":190,"react":187}]},{},[205]);
+},{"./components/app.js":190,"react":187}]},{},[206]);

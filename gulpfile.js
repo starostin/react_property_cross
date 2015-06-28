@@ -35,9 +35,11 @@ gulp.task('browserify', function(){
 gulp.task('copy', function(){
     gulp.src('www/index.html')
         .pipe(gulp.dest('build'));
+    gulp.src('www/assets/*.*')
+        .pipe(gulp.dest('build/assets'));
 });
 
-gulp.task('default', ['browserify', 'copy']);
+gulp.task('default', ['browserify', 'copy', 'browser-sync']);
 
 gulp.task('watch', function(){
     gulp.watch('www/**/*.*', ['default'])
