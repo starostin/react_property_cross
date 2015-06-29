@@ -15,7 +15,7 @@ var Catalog = React.createClass({
             return <CatalogItem item={item} />
         });
         return (
-            <div className="row">
+            <div className="row" key="2">
                 {items}
             </div>
         )

@@ -31,7 +31,7 @@ var Cart = React.createClass({
             )
         });
         return (
-            <div>
+            <div key="2">
                 <table className="table table-hover">
                     <thead>
                         <tr>

@@ -19,7 +19,7 @@ var CatalogDetail = React.createClass({
     mixins: [StoreWatchMixin(getCatalogItem)],
     render: function(){
         return (
-            <div>
+            <div key="3">
                 <h2>{this.state.item.title}</h2>
                 <img src={this.state.item.img} width="200px" />
                 <p>{this.state.item.description}</p>
