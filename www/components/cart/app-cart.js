@@ -6,6 +6,7 @@ var Increase = require('./app-increase');
 var Decrease = require('./app-decrease');
 var StoreWatchMixin =  require('../../mixins/StoreWatchMixin');
 var Link =  require('react-router-component').Link;
+var Settings = require('./../../settings');
 
 function cartItems(){
     return {items: AppStore.getCart()}
@@ -52,7 +53,7 @@ var Cart = React.createClass({
                     </tr>
                     </tfoot>
                 </table>
-                <Link href="/"> Continue Shopping </Link>
+                <Link href={Settings.serverUrl + '/'}> Continue Shopping </Link>
             </div>
         )
     }

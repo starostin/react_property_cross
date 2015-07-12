@@ -4,6 +4,7 @@ var AppStore = require('../../stores/app-store');
 var AddToCart = require('../catalog/app-addtocart');
 var StoreWatchMixin =  require('../../mixins/StoreWatchMixin');
 var Link =  require('react-router-component').Link;
+var Settings = require('./../../settings');
 
 function getCatalogItem(component){
     var thisItem;
@@ -26,7 +27,7 @@ var CatalogDetail = React.createClass({
                 <p>${this.state.item.cost} <span className="text-success">{this.state.item.inCart && '(' + this.state.item.qty + ' item in cart)'}</span> </p>
                 <div className="btn-group btn-group-sm">
                     <AddToCart item={this.state.item} />
-                    <Link href="/" className="btn btn-default">Continue Shopping</Link>
+                    <Link href={Settings.serverUrl + '/'} className="btn btn-default">Continue Shopping</Link>
                 </div>
             </div>
         );

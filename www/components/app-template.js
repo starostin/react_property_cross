@@ -4,7 +4,6 @@ var Header = require('./header/app-header');
 var addons = require('react-addons');
 var TransitionGroup = require('react/lib/ReactCSSTransitionGroup');
 
-console.log('-=-=-=-=-=-==-=-', TransitionGroup)
 var Template = React.createClass({
     render: function(){
         return (

@@ -39,7 +39,7 @@ gulp.task('copy', function(){
         .pipe(gulp.dest('build/assets'));
 });
 
-gulp.task('default', ['browserify', 'copy', 'browser-sync']);
+gulp.task('default', ['browserify', 'copy']);
 
 gulp.task('watch', function(){
     gulp.watch('www/**/*.*', ['default'])
