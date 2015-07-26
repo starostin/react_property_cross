@@ -25,7 +25,8 @@
     "gulp-imagemin": "~1.1.0",
     "gulp-webserver": "~0.9.1",
     "gulp": "~3.8.11",
-    "browser-sync": "~2.7.6"
+    "browser-sync": "~2.7.6",
+    "react-router": "~0.13.3"
   },
   "dependencies": {
     "browserify": "^10.2.3",

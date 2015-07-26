@@ -1,4 +1,4 @@
 var Settings = {
-    serverUrl: '/react_property_cross/build'
+    serverUrl: ''
 };
 module.exports = Settings;
